@@ -1,0 +1,17 @@
+{
+  "name": "discord2matrix",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "blurhash": "^2.0.5",
+    "file-type": "^22.0.1",
+    "image-size": "^2.0.2",
+    "marked": "^18.0.2",
+    "ora": "^9.3.0"
+  }
+}
