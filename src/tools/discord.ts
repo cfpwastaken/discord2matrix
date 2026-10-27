@@ -71,44 +71,44 @@ function translateSpoilers(content: string): string {
 async function translateAttachment(attachment: DiscordChatExportAttachment, userId: string): Promise<{ type: string; content: object }> {
 	const IS_IMAGE = attachment.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
 	if (IS_IMAGE) {
-		const image = await uploadImage(attachment.url, mapUser(userId));
+		// const image = await uploadImage(attachment.url, mapUser(userId));
 		return {
 			type: "m.room.message",
 			content: {
 				body: attachment.fileName,
 				filename: attachment.fileName,
-				info: {
-					mimetype: image.mime,
-					"org.matrix.msc4230.is_animated": false,
-					size: image.size,
-					w: image.w,
-					h: image.h,
-				},
+				// info: {
+				// 	mimetype: image.mime,
+				// 	"org.matrix.msc4230.is_animated": false,
+				// 	size: image.size,
+				// 	w: image.w,
+				// 	h: image.h,
+				// },
 				msgtype: "m.image",
-				url: image.url,
+				// url: image.url,
 				"de.importer.imported_from": "discord",
 			}
 		}
 	};
-	const fileType = await fileTypeFromFile(attachment.url);
-	const mime = fileType?.mime || "application/octet-stream";
-	const file = await uploadFile({
-		userId: mapUser(userId),
-		file: Buffer.from(await readFile(attachment.url)),
-		filename: attachment.fileName,
-		mimetype: mime,
-	});
+	// const fileType = await fileTypeFromFile(attachment.url);
+	// const mime = fileType?.mime || "application/octet-stream";
+	// const file = await uploadFile({
+	// 	userId: mapUser(userId),
+	// 	file: Buffer.from(await readFile(attachment.url)),
+	// 	filename: attachment.fileName,
+	// 	mimetype: mime,
+	// });
 	return {
 		type: "m.room.message",
 		content: {
 			body: attachment.fileName,
 			filename: attachment.fileName,
 			info: {
-				mimetype: mime,
+				// mimetype: mime,
 				size: attachment.fileSizeBytes,
 			},
 			msgtype: "m.file",
-			url: file,
+			// url: file,
 			"de.importer.imported_from": "discord",
 		}
 	}

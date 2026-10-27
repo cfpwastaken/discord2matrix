@@ -23,9 +23,9 @@ const homeservers = getAllParticipatingHomeservers(file);
 const messageIds = new Map<string, string>();
 
 function log(...args: any[]) {
-	spinner.clear();
+	// spinner.clear();
 	console.log(...args);
-	spinner.render();
+	// spinner.render();
 }
 
 function remapEventIDs(content: any): object {
@@ -43,9 +43,26 @@ function remapEventIDs(content: any): object {
 	return content;
 }
 
-let spinner = ora("Importing messages...").start();
+// let spinner = ora("Importing messages...").start();
 
-for(const message of file.messages) {
+if (file.messages[0] === undefined) {
+	log("No messages to import.");
+	process.exit(0);
+}
+
+// Testing
+await sendEvent({
+	roomId: file.messages[0].room_id,
+	eventType: "m.room.message",
+	userId: file.messages[0].sender,
+	ts: file.messages[0].origin_server_ts,
+	content: {
+		body: "=== IMPORT START ===",
+		msgtype: "m.text",
+	}
+})
+
+for(const message of file.messages.slice(0, 10)) { // Testing
 	const id = await sendEvent({
 		roomId: message.room_id,
 		eventType: message.type,
@@ -55,8 +72,8 @@ for(const message of file.messages) {
 	});
 	messageIds.set(message.event_id, id);
 	await awaitAllFederation(id, message.room_id, homeservers);
-	spinner.text = `Importing messages... (${messageIds.size}/${file.messages.length}) - date ${new Date(message.origin_server_ts).toISOString()} - last imported: ${id} - requests: ${getRequestCount()}`;
-	// console.log(message.event_id, "->", id);
+	// spinner.text = `Importing messages... (${messageIds.size}/${file.messages.length}) - date ${new Date(message.origin_server_ts).toISOString()} - last imported: ${id} - requests: ${getRequestCount()}`;
+	console.log(message.event_id, "->", id);
 }
 
-spinner.succeed(`Imported ${messageIds.size} messages!`);
+// spinner.succeed(`Imported ${messageIds.size} messages!`);

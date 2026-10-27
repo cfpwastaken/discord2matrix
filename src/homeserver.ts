@@ -10,6 +10,15 @@ function getHomeserver(mxid: string) {
 	return config.homeservers[domain];
 }
 
+function getAnyUserFromHomeserver(homeserver: string) {
+	for(const [dcic, mapping] of Object.entries(config.mapping)) {
+		if(mapping.homeserver === homeserver) {
+			return mapping.mxid;
+		}
+	}
+	throw new Error(`No user found for homeserver ${homeserver}`);
+}
+
 let requests = 0;
 
 export async function sendEvent(options: {
@@ -20,13 +29,17 @@ export async function sendEvent(options: {
 	content: object;
 }) {
 	const homeserver = getHomeserver(options.userId);
-	const res = await fetch(`${homeserver.url}/_matrix/client/v3/rooms/${encodeURIComponent(options.roomId)}/send/${encodeURIComponent(options.eventType)}/${Date.now()}?user_id=${encodeURIComponent(options.userId)}&ts=${options.ts}`, {
+	console.log("Sending message as " + options.userId + " via " + homeserver.url + " to room " + options.roomId);
+	const res = await fetch(`${homeserver.url}/_matrix/client/v3/rooms/${encodeURIComponent(options.roomId)}/send/${encodeURIComponent(options.eventType)}/${Date.now()}?user_id=${encodeURIComponent(options.userId)}`, {
 		method: "PUT",
 		headers: {
 			"Content-Type": "application/json",
 			"Authorization": `Bearer ${homeserver.as_token}`,
 		},
-		body: JSON.stringify(options.content),
+		body: JSON.stringify({
+			...options.content,
+			"de.importer.original_ts": options.ts,
+		}),
 	});
 	requests++;
 	if (!res.ok) {
@@ -35,6 +48,7 @@ export async function sendEvent(options: {
 		throw new Error(`Failed to send event: ${res.status} ${res.statusText} - ${errorText}`);
 	}
 	const data = await res.json() as { event_id: string };
+	console.log("=> " + data.event_id);
 	return data.event_id;
 }
 
@@ -62,7 +76,7 @@ export async function awaitFederation(eventId: string, roomId: string, otherUser
 
 export async function awaitAllFederation(eventId: string, roomId: string, homeservers: Set<string>) {
 	for (const homeserver of homeservers) {
-		await awaitFederation(eventId, roomId, `@dummy:${homeserver}`);
+		await awaitFederation(eventId, roomId, getAnyUserFromHomeserver(homeserver));
 	}
 }
 
@@ -78,6 +92,7 @@ export async function uploadFile(options: {
 	filename: string;
 	mimetype: string;
 }) {
+	throw new Error("uploadFile is disabled for now");
 	if(uploadCache[options.filename]) {
 		return uploadCache[options.filename];
 	}
