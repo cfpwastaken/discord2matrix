@@ -10,7 +10,8 @@ function getAllParticipatingHomeservers(file: ChatExport) {
 	for(const message of file.messages) {
 		const homeserver = message.sender.split(":")[1];
 		if (!homeserver) {
-			throw new Error(`Invalid sender ID: ${message.sender}`);
+			// throw new Error(`Invalid sender ID: ${message.sender}`);
+			continue;
 		}
 		homeservers.add(homeserver);
 	}
@@ -63,10 +64,14 @@ await sendEvent({
 })
 
 let throughputStart = Date.now();
-const THROUGHPUT_COUNT = 10;
+const THROUGHPUT_COUNT = 100;
 let throughputCounter = 0;
 
-for(const [i, message] of file.messages.entries()) { // Testing
+for(const [i, message] of file.messages.entries()) {
+	if (!message.sender.includes(":")) {
+		console.warn(`Invalid sender ID: ${message.sender}, skipping message`);
+		continue;
+	}
 	const id = await sendEvent({
 		roomId: message.room_id,
 		eventType: message.type,

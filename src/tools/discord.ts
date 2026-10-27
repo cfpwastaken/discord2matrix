@@ -249,7 +249,7 @@ const output: ChatExport = {
 	export_date: input.exportedAt,
 	exported_by: input.guild.name,
 	topic: input.channel.topic || "",
-	messages: (await Promise.all(input.messages.slice(0, 50).map(translateMessage))).flat(),
+	messages: (await Promise.all(input.messages.map(translateMessage))).flat(),
 };
 
 await writeFile(outputFile, JSON.stringify(output, null, 2), "utf-8");
