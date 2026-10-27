@@ -62,7 +62,11 @@ await sendEvent({
 	}
 })
 
-for(const message of file.messages.slice(0, 10)) { // Testing
+let throughputStart = Date.now();
+const THROUGHPUT_COUNT = 10;
+let throughputCounter = 0;
+
+for(const [i, message] of file.messages.entries()) { // Testing
 	const id = await sendEvent({
 		roomId: message.room_id,
 		eventType: message.type,
@@ -74,6 +78,25 @@ for(const message of file.messages.slice(0, 10)) { // Testing
 	await awaitAllFederation(id, message.room_id, homeservers);
 	// spinner.text = `Importing messages... (${messageIds.size}/${file.messages.length}) - date ${new Date(message.origin_server_ts).toISOString()} - last imported: ${id} - requests: ${getRequestCount()}`;
 	console.log(message.event_id, "->", id);
+
+	throughputCounter++;
+	if (throughputCounter >= THROUGHPUT_COUNT) {
+		console.log();
+		console.log("=================================");
+		console.log("Progress: " + (i + 1) + "/" + file.messages.length);
+		const throughputEnd = Date.now();
+		const throughput = THROUGHPUT_COUNT / ((throughputEnd - throughputStart) / 1000);
+		console.log(`Throughput: ${throughput.toFixed(2)} events/s`);
+		// Calculate ETA
+		const totalMessages = file.messages.length;
+		const remainingMessages = totalMessages - (i + 1);
+		const eta = remainingMessages / throughput;
+		console.log(`ETA: ${eta.toFixed(2)} seconds (${(eta / 60).toFixed(2)} minutes)`);
+		throughputStart = throughputEnd;
+		throughputCounter = 0;
+		console.log("=================================");
+		console.log();
+	}
 }
 
 // spinner.succeed(`Imported ${messageIds.size} messages!`);
