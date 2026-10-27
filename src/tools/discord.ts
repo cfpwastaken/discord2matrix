@@ -268,6 +268,28 @@ async function convertDiscordExport(inputFile: string, outputFile: string) {
 		messages: (await Promise.all(input.messages.map((message) => translateMessage(message, input)))).flat(),
 	};
 
+	if (input.channel.type == "GuildPublicThread" || input.channel.type == "GuildPrivateThread") {
+		// Add a MSC4558 thread name event
+		// https://github.com/matrix-org/matrix-spec-proposals/pull/4558
+		output.messages = [
+			...output.messages.slice(0, 1),
+			{
+				origin_server_ts: input.messages[0]!.timestamp,
+				room_id: mapRoom(input.channel.categoryId!),
+				sender: mapUser(input.messages[0]!.author.id),
+				type: "m.thread.name",
+				content: {
+					name: input.channel.name,
+					"m.relates_to": {
+						"rel_type": "m.thread.name",
+						"event_id": input.messages[0]!.id
+					}
+				}
+			} as unknown as ChatExportMessage,
+			...output.messages.slice(1)
+		]
+	}
+
 	await writeFile(outputFile, JSON.stringify(output, null, 2), "utf-8");
 }
 
